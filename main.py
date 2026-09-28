@@ -4,8 +4,6 @@ import finnhub #importovani finnhubu do kodu
 import datetime #modul pro cas
 from datetime import datetime #cas
 from datetime import timezone #casova pasma
-cas = datetime.now(timezone.utc) #ziska aktualni, nemenny cas (neni ovlivnen casovymi posuny)
-cas = cas.isoformat() #prepise do textoveho formatu
 
 import time #casovy modul
 
@@ -30,46 +28,48 @@ akcie = [ #seznam, kde jsou dosaditelne vsechny informace, abych nemusle psat ko
 ]
 finnhub_client = finnhub.Client(api_key=klic)  # vytvori spojeni s finnhubem
 
-soubor = open("datasoc.csv", "a", newline="", encoding="utf-8")  # otevru soubor
-zapisovac = csv.writer(soubor)  # pojmenuju promennou, co zapisuje
+for i in range(5):
+    soubor = open("datasoc.csv", "a", newline="", encoding="utf-8")  # otevru soubor
+    zapisovac = csv.writer(soubor)  # pojmenuju promennou, co zapisuje
+    cas = datetime.now(timezone.utc)  # ziska aktualni, nemenny cas (neni ovlivnen casovymi posuny)
+    cas = cas.isoformat()  # prepise do textoveho formatu
+    for a in akcie: #cyklus
+        try: #kdyz vyjde, tak normalne zapise
+            ak = (finnhub_client.quote(a["ticker"])) #klasicka akcie
+            ak = ak["c"] #cena posledniho obchodu
+        except: #kdyz kvuli necemu nevyjde, zapise none a cely program se kvuli tomu nezesype
+            ak = None
 
-for a in akcie: #cyklus
-    try: #kdyz vyjde, tak normalne zapise
-        ak = (finnhub_client.quote(a["ticker"])) #klasicka akcie
-        ak = ak["c"] #cena posledniho obchodu
-    except: #kdyz kvuli necemu nevyjde, zapise none a cely program se kvuli tomu nezesype
-        ak = None
+        try:
+            atk = (requests.get(f"https://api.kraken.com/0/public/Ticker?pair={a['pair']}&asset_class=tokenized_asset")) #tokenizovana akcie kraken
+            atk = atk2 = atk3 = atk4 = atk5 = atk.json() #ulozeni dat z requestu
 
-    try:
-        atk = (requests.get(f"https://api.kraken.com/0/public/Ticker?pair={a['pair']}&asset_class=tokenized_asset")) #tokenizovana akcie kraken
-        atk = atk2 = atk3 = atk4 = atk5 = atk.json() #ulozeni dat z requestu
+            atk = atk["result"][a["pair"]]["c"][0] #cena posledniho obchodu
 
-        atk = atk["result"][a["pair"]]["c"][0] #cena posledniho obchodu
+            atk2 = atk2["result"][a["pair"]]["a"][0] #cena ask (za kolik koupim)
 
-        atk2 = atk2["result"][a["pair"]]["a"][0] #cena ask (za kolik koupim)
+            atk3 = atk3["result"][a["pair"]]["b"][0] #cena bid (za kolik prodam)
 
-        atk3 = atk3["result"][a["pair"]]["b"][0] #cena bid (za kolik prodam)
+            atk4 = atk4["result"][a["pair"]]["t"][0] #pocet obchodu od 0:00
 
-        atk4 = atk4["result"][a["pair"]]["t"][0] #pocet obchodu od 0:00
+            atk5 = atk5["result"][a["pair"]]["t"][1] #pocet obchodu za poslednich 24 hodin
+        except:
+            atk, atk2, atk3, atk4, atk5 = None, None, None, None, None
 
-        atk5 = atk5["result"][a["pair"]]["t"][1] #pocet obchodu za poslednich 24 hodin
-    except:
-        atk, atk2, atk3, atk4, atk5 = None, None, None, None, None
+        try:
+            atoc = (requests.get(f"https://api.geckoterminal.com/api/v2/simple/networks/solana/token_price/{a['adresa']}")) #tokenizovana akcie onchain
+            atoc = atoc.json()
+            atoc = atoc["data"]["attributes"]["token_prices"][a["adresa"]] #cena na on-chainu
+        except:
+            atoc = None
 
-    try:
-        atoc = (requests.get(f"https://api.geckoterminal.com/api/v2/simple/networks/solana/token_price/{a['adresa']}")) #tokenizovana akcie onchain
-        atoc = atoc.json()
-        atoc = atoc["data"]["attributes"]["token_prices"][a["adresa"]] #cena na on-chainu
-    except:
-        atoc = None
+        zapisovac.writerow([cas, a["ticker"], ak, atk, atk2, atk3, atk4, atk5, atoc]) #reknu, co zapsat
 
-    zapisovac.writerow([cas, a["ticker"], ak, atk, atk2, atk3, atk4, atk5, atoc]) #reknu, co zapsat
-
-    print(ak)
-    print(atk, atk2, atk3, atk4, atk5)
-    print(atoc)
-    print(cas)
-    print("")
-    time.sleep(15)
-
-soubor.close() #zavru soubor
+        print(ak)
+        print(atk, atk2, atk3, atk4, atk5)
+        print(atoc)
+        print(cas)
+        print("")
+        time.sleep(15)
+    soubor.close()  #zavru soubor
+    time.sleep(3600)
