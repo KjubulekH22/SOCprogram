@@ -2,7 +2,7 @@ name: sberdat
 on:
   workflow_dispatch:
   schedule:
-  - cron: "17 */3 * * *"
+  - cron: "17 */4 * * *"
 
 jobs:
   sber:
@@ -23,4 +23,5 @@ jobs:
           git config user.email "actions@github.com"
           git add datasoc.csv
           git commit -m "sber dat" || echo "nic noveho"
+          git pull --rebase
           git push

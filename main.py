@@ -28,7 +28,7 @@ akcie = [ #seznam, kde jsou dosaditelne vsechny informace, abych nemusle psat ko
 ]
 finnhub_client = finnhub.Client(api_key=klic)  # vytvori spojeni s finnhubem
 
-for i in range(5):
+for i in range(4):
     soubor = open("datasoc.csv", "a", newline="", encoding="utf-8")  # otevru soubor
     zapisovac = csv.writer(soubor)  # pojmenuju promennou, co zapisuje
     cas = datetime.now(timezone.utc)  # ziska aktualni, nemenny cas (neni ovlivnen casovymi posuny)
