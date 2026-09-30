@@ -1,4 +1,4 @@
-name: sberdat
+name: sberdat #tady pomahalo ai
 on:
   workflow_dispatch:
   schedule:
